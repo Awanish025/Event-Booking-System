@@ -1,11 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
-import { Plus, Trash2, MapPin, Calendar, DollarSign, Users, Image } from 'lucide-react';
+import { Plus, Trash2, MapPin, Calendar, DollarSign, Users, Image, Search } from 'lucide-react';
 
 const AdminDashboard = () => {
     // State for storing list of events
     const [events, setEvents] = useState([]);
     const [showForm, setShowForm] = useState(false);
+    const [fetchingCoords, setFetchingCoords] = useState(false);
 
     // State for form data when creating a new event
     const [formData, setFormData] = useState({
@@ -15,6 +16,8 @@ const AdminDashboard = () => {
         date: '',
         total_seats: '',
         price: '',
+        latitude: '',
+        longitude: '',
         img: null // Store file object here
     });
 
@@ -25,7 +28,7 @@ const AdminDashboard = () => {
 
     const fetchEvents = async () => {
         try {
-            const response = await axios.get('http://localhost:5000/events');
+            const response = await axios.get(`${import.meta.env.VITE_API_URL || 'http://localhost:5000'}/events`);
             setEvents(response.data);
         } catch (error) {
             console.error('Error fetching events:', error);
@@ -43,9 +46,30 @@ const AdminDashboard = () => {
         }
     };
 
+
+
     // Handle form submission to create a new event
     const handleSubmit = async (e) => {
         e.preventDefault();
+        setFetchingCoords(true);
+
+        let finalLat = formData.latitude;
+        let finalLng = formData.longitude;
+
+        // Automatically fetch coordinates if location is provided
+        if (formData.location) {
+            try {
+                const response = await axios.get(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(formData.location)}`);
+                if (response.data && response.data.length > 0) {
+                    finalLat = response.data[0].lat;
+                    finalLng = response.data[0].lon;
+                } else {
+                    console.warn('Location not found, proceeding without coordinates.');
+                }
+            } catch (error) {
+                console.error('Error fetching coordinates:', error);
+            }
+        }
 
         // Create FormData object to send file and text data
         const data = new FormData();
@@ -55,13 +79,17 @@ const AdminDashboard = () => {
         data.append('date', formData.date);
         data.append('total_seats', formData.total_seats);
         data.append('price', formData.price);
+        // Only append if we have valid values
+        if (finalLat) data.append('latitude', finalLat);
+        if (finalLng) data.append('longitude', finalLng);
+
         if (formData.img) {
             data.append('img', formData.img);
         }
 
         try {
             // Send POST request with multipart/form-data header
-            await axios.post('http://localhost:5000/events', data, {
+            await axios.post(`${import.meta.env.VITE_API_URL || 'http://localhost:5000'}/events`, data, {
                 headers: {
                     'Content-Type': 'multipart/form-data'
                 }
@@ -76,12 +104,16 @@ const AdminDashboard = () => {
                 date: '',
                 total_seats: '',
                 price: '',
+                latitude: '',
+                longitude: '',
                 img: null
             });
             fetchEvents();
         } catch (error) {
             alert('Error creating event');
             console.error(error);
+        } finally {
+            setFetchingCoords(false);
         }
     };
 
@@ -89,7 +121,7 @@ const AdminDashboard = () => {
     const handleDelete = async (id) => {
         if (window.confirm('Are you sure you want to delete this event?')) {
             try {
-                await axios.delete(`http://localhost:5000/events/${id}`);
+                await axios.delete(`${import.meta.env.VITE_API_URL || 'http://localhost:5000'}/events/${id}`);
                 fetchEvents(); // Refresh list after deletion
             } catch (error) {
                 console.error('Error deleting event:', error);
@@ -222,10 +254,17 @@ const AdminDashboard = () => {
                         <div className="col-span-2">
                             <button
                                 type="submit"
-                                className="w-full py-3 bg-indigo-600 text-white font-bold rounded-lg hover:bg-indigo-700 transition shadow-md flex justify-center items-center"
+                                disabled={fetchingCoords}
+                                className="w-full py-3 bg-indigo-600 text-white font-bold rounded-lg hover:bg-indigo-700 transition shadow-md flex justify-center items-center disabled:opacity-70 cursor-pointer"
                             >
-                                <Plus className="w-5 h-5 mr-2" />
-                                Publish Event
+                                {fetchingCoords ? (
+                                    'Processing...'
+                                ) : (
+                                    <>
+                                        <Plus className="w-5 h-5 mr-2" />
+                                        Publish Event
+                                    </>
+                                )}
                             </button>
                         </div>
                     </form>

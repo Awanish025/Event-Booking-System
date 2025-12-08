@@ -11,7 +11,7 @@ const LandingPage = () => {
     useEffect(() => {
         const fetchFeaturedEvents = async () => {
             try {
-                const response = await axios.get('http://localhost:5000/events');
+                const response = await axios.get(`${import.meta.env.VITE_API_URL || 'http://localhost:5000'}/events`);
                 // Display top 3 events as featured
                 setFeaturedEvents(response.data.slice(0, 3));
             } catch (error) {

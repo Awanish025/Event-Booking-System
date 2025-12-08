@@ -65,7 +65,7 @@ exports.getEventById = (req, res) => {
 
 // Create new event (Admin only)
 exports.createEvent = (req, res) => {
-    const { title, description, location, date, total_seats, price } = req.body;
+    const { title, description, location, date, total_seats, price, latitude, longitude } = req.body;
     const available_seats = total_seats; // Initially, available seats = total seats
 
     // Handle image upload
@@ -77,9 +77,9 @@ exports.createEvent = (req, res) => {
         img = req.body.img;
     }
 
-    const query = 'INSERT INTO events (title, description, location, date, total_seats, available_seats, price, img) VALUES (?, ?, ?, ?, ?, ?, ?, ?)';
+    const query = 'INSERT INTO events (title, description, location, date, total_seats, available_seats, price, img, latitude, longitude) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)';
 
-    db.query(query, [title, description, location, date, total_seats, available_seats, price, img], (err, result) => {
+    db.query(query, [title, description, location, date, total_seats, available_seats, price, img, latitude, longitude], (err, result) => {
         if (err) {
             console.error(err);
             return res.status(500).json({ message: 'Error creating event' });
@@ -91,10 +91,10 @@ exports.createEvent = (req, res) => {
 // Update event (Admin only)
 exports.updateEvent = (req, res) => {
     const { id } = req.params;
-    const { title, description, location, date, total_seats, price } = req.body;
+    const { title, description, location, date, total_seats, price, latitude, longitude } = req.body;
 
     let imgUpdate = '';
-    let params = [title, description, location, date, total_seats, price];
+    let params = [title, description, location, date, total_seats, price, latitude, longitude];
 
     // Handle image update if a new file is uploaded
     if (req.file) {
@@ -108,7 +108,7 @@ exports.updateEvent = (req, res) => {
 
     params.push(id);
 
-    const query = `UPDATE events SET title=?, description=?, location=?, date=?, total_seats=?, price=?${imgUpdate} WHERE id=?`;
+    const query = `UPDATE events SET title=?, description=?, location=?, date=?, total_seats=?, price=?, latitude=?, longitude=?${imgUpdate} WHERE id=?`;
 
     db.query(query, params, (err, result) => {
         if (err) {

@@ -4,6 +4,7 @@ import axios from 'axios';
 import { io } from 'socket.io-client';
 import { motion } from 'framer-motion';
 import { MapPin, Calendar, Clock, Users, CreditCard } from 'lucide-react';
+import MapComponent from './MapComponent';
 
 const EventDetails = () => {
     const { id } = useParams();
@@ -22,7 +23,7 @@ const EventDetails = () => {
         fetchEvent();
 
         // Initialize Socket.IO connection for real-time updates
-        const socket = io('http://localhost:5000');
+        const socket = io(import.meta.env.VITE_API_URL || 'http://localhost:5000');
 
         // Listen for 'seatUpdate' event from server
         socket.on('seatUpdate', (data) => {
@@ -38,7 +39,7 @@ const EventDetails = () => {
 
     const fetchEvent = async () => {
         try {
-            const response = await axios.get(`http://localhost:5000/events/${id}`);
+            const response = await axios.get(`${import.meta.env.VITE_API_URL || 'http://localhost:5000'}/events/${id}`);
             setEvent(response.data);
             setLoading(false);
         } catch (error) {
@@ -57,7 +58,7 @@ const EventDetails = () => {
         setSubmitting(true);
         try {
             // Send booking request to backend
-            const response = await axios.post('http://localhost:5000/bookings', {
+            const response = await axios.post(`${import.meta.env.VITE_API_URL || 'http://localhost:5000'}/bookings`, {
                 event_id: id,
                 ...bookingData
             });
@@ -104,12 +105,13 @@ const EventDetails = () => {
                         {event.description}
                     </p>
 
-                    {/* Map Placeholder */}
-                    <div className="bg-gray-100 rounded-xl h-64 flex items-center justify-center text-gray-400 border border-gray-200">
-                        <div className="text-center">
-                            <MapPin className="w-10 h-10 mx-auto mb-2" />
-                            <p>Map Integration Placeholder</p>
-                        </div>
+                    {/* Map Section */}
+                    <div className="w-full h-64 rounded-xl overflow-hidden shadow-lg border border-gray-100 mt-8">
+                        <MapComponent
+                            className="w-full h-full"
+                            lat={event.latitude}
+                            lng={event.longitude}
+                        />
                     </div>
                 </motion.div>
 

@@ -1,2 +1,4 @@
 ﻿.env
 server/.env
+
+server/certs/ca.pem
