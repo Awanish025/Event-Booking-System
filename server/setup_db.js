@@ -58,17 +58,17 @@ const schemaSql = fs.readFileSync(schemaPath, 'utf8');
 
 connection.connect((err) => {
     if (err) {
-        console.error('❌ Error connecting to MySQL:', err.message);
+        console.error(' Error connecting to MySQL:', err.message);
         process.exit(1);
     }
-    console.log('🎉 Connected to Aiven MySQL!');
+    console.log(' Connected to Aiven MySQL!');
 
     connection.query(schemaSql, (err, results) => {
         if (err) {
-            console.error('❌ Error executing schema:', err.message);
+            console.error(' Error executing schema:', err.message);
             process.exit(1);
         }
-        console.log('📌 Database initialized successfully.');
+        console.log(' Database initialized successfully.');
         connection.end();
     });
 });
